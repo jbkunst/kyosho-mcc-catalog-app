@@ -1,3 +1,7 @@
+.Renviron
+data/imgs/raw
+data/json
+
 # Archivos y carpetas generados por R
 .Rhistory
 .Rapp.history
