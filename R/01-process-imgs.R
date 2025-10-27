@@ -6,7 +6,7 @@ library(ellmer)
 # funs -------------------------------------------------------------------
 save_json <- tool(
   function(json, file) {
-    cli::cli_inform(file)
+    cli::cli_inform("save_json func: {file} - start")
 
     file_out <- file
     file_out <- tools::file_path_sans_ext(basename(file_out))
@@ -17,8 +17,7 @@ save_json <- tool(
       jsonlite::toJSON(pretty = TRUE, auto_unbox = TRUE) |>
       write(file_out)
 
-    cli::cli_inform("{file} ok!")
-    return("ok!")
+    cli::cli_inform("save_json func: {file} - end")
   },
   name = "save_json",
   description = "Save the JSON using the provided information",
@@ -32,14 +31,18 @@ save_json <- tool(
 images <- fs::dir_ls("data/imgs/raw/") |>
   as.character()
 
-images_content <- map(images, content_image_file) |>
-  map("data")
-
-prompt <- read_lines("prompts/01-extract-image-info.md")
+# remove processed images
+images <- tibble(image = images) |>
+  mutate(f = basename(tools::file_path_sans_ext(image))) |>
+  filter(
+    !f %in% basename(tools::file_path_sans_ext(fs::dir_ls("data/json/")))
+  ) |>
+  pull(image)
 
 chat <- ellmer::chat_openai(
-  system_prompt = prompt,
-  model = "gpt-4o-mini",
+  system_prompt = read_lines("prompts/01-extract-image-info.md"),
+  model = "gpt-4o",
+  # model = "gpt-4o-mini",
   echo = "none"
 )
 # chat <- ellmer::chat_anthropic(system_prompt = prompt, echo = "none")
@@ -47,21 +50,29 @@ chat <- ellmer::chat_openai(
 chat$register_tool(save_json)
 
 # process ----------------------------------------------------------------
-prompts <- interpolate("The image {{ images }} is {{images_content}}?")
+# prompts <- interpolate("{{images_content}}")
+# length(prompts)
+# output <- parallel_chat(chat, prompts)
 
-length(prompts)
-
-output <- map(prompts, chat = chat, .f = function(p, chat) {
+output <- map(images, chat = chat, .f = function(image_path, chat) {
+  cli::cli_inform("the {image_path}")
   chat <- chat$clone()
-  chat$chat(p)
+  chat$chat(
+    str_glue("the image file name is {image_path} and the content is"),
+    content_image_file(image_path)
+  )
 })
 
-# sometimes the chat don't use the tool :/
+# # sometimes the chat don't use the tool :/
 output |>
   map(1) |>
   map(str_remove, "```json") |>
   map(str_remove, "```$") |>
-  map2(images, save_json)
+  walk2(images, save_json)
 
-# output <- parallel_chat(chat, prompts)
-# output
+# json <- output |>
+#   map(1) |>
+#   map(str_remove, "```json") |>
+#   map(str_remove, "```$") |>
+#   first()
+# file <- "miniature_lexus_lfa.jpg"

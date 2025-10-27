@@ -22,6 +22,7 @@ Analyze the image and return the data strictly in the structure below. The image
 - engine_type: (examples: Combustion, Hybrid, Electric)
 - engine_position: (examples: Front, Mid-front, Mid-rear, Rear)
 - cylinder_layout: (examples: V, Boxer, Inline, W, Rotary)
+- cylinders_count: Integer number of cylinders (examples: 3, 4, 6, 8, 10, 12, 16)
 - displacement_cc: Integer (cc)
 - power_hp: Integer
 - torque_nm: Integer
@@ -51,11 +52,7 @@ Miniature info,
 - miniature_materials: (examples: Diecast, Plastic, Resin, Diecast + Plastic parts)
 - miniature_condition: (examples: New, Used, Mint in Box, Loose)
 
-# Tool use
-
-After producing the JSON, call the tool `save_json` with the JSON object and the desired filename to save it.
-
-Example shape (values are placeholders)
+As your response only return the json under this structure.
 
 ```json
 {
@@ -70,6 +67,7 @@ Example shape (values are placeholders)
   "engine_type": "",
   "engine_position": "",
   "cylinder_layout": "",
+  "cylinders_count": "",
   "displacement_cc": "",
   "power_hp": "",
   "torque_nm": "",
@@ -98,3 +96,5 @@ Example shape (values are placeholders)
   "miniature_condition": ""
 }
 ```
+
+Then you can use the tool `save_json` sending the json and the name of the image to save the informacion to the disk.
